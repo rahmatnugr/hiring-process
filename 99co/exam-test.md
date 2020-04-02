@@ -38,7 +38,7 @@
    chmod 444 index.html
    ```
 
-   But for convinience, we should probably also add write `user` permission to the file for editing purpose. So final command is
+   But for convinience, we should probably add `user` write permission to the file for editing purpose. So final command is
 
    ```
    chmod 644 index.html
@@ -122,7 +122,31 @@
 
 3. _Assume we have setup a service with the following layers:_
 
-_When the client receive error 502 Bad Gateway, how would you like to troubleshoot to fix the issue to point out the root problem? You can be as detailed as possible and use assumption for the information that’s not given here._
+   ![Part B - 3](../99co/images/part-b-3.png)
+
+   _When the client receive error 502 Bad Gateway, how would you like to troubleshoot to fix the issue to point out the root problem? You can be as detailed as possible and use assumption for the information that’s not given here._
+
+   **Answer**
+
+   When error 502 Bad Gateway happens, most likely the problem is the upstream application behind load balancer/reverse proxy cannot be accessed. So we need to take a deeper look what causing this problem.
+
+   Top to Bottom approach:
+
+   - First Layer: Client to Firewall
+
+     There is no error that causing bad gateway error between client to firewall connection, because firewall just only enforce security policy, for example port that should be accessable publicly.
+
+   - Second Layer: Firewall to Load Balancer
+
+     In this layer also no error that causing bad gateway error because the correlation between firewall and load balancer is firewall only enforce security policy, not causing upstream app not accessible.
+
+   - Third Layer: Load Balancer to Virtual Machine
+
+     In this layer, probably there is problem that causing bad gateway error, such as network connection between load balancer and VM. In the diagram, there is 2 VM serving same app, connected to single Load Balancer. If both connection was down, or both VM was also down, or there is problem with web app inside VM, most likely will make client receive 502 bad gateway error. If there is no problem with connection or VM, then we should check to next layer.
+
+   - Fourth Layer: Nginx to PHP App (inside VM)
+
+     In this layer, inside the VM, there are 2 service that mainly serve traffic from client, nginx as reverse proxy and PHP App as upstream/backend app. Likely the cause of error is misconfigured nginx (different listening port, wrong upstream port, etc.) or probably PHP App is throwing error that caused by the code itself (wrong syntax, misspelled code, etc.). We need to look at log both nginx and php app, so we will know what error that causing bad gateway.
 
 ---
 
@@ -130,7 +154,7 @@ _When the client receive error 502 Bad Gateway, how would you like to troublesho
 
 This part helps us to understand how you would design and build a scalable system that could serve million users per month. Choose minimum 1 problem that you find the most interesting.
 
-Tell us how you would design the system given the requirements, what technologies (open source or 3rd party) you are going to use, and the strategy/approach that you are going to use to handlehigh usage. You can use diagrams to help illustrate your explanation. Feel free to add assumptions.
+Tell us how you would design the system given the requirements, what technologies (open source or 3rd party) you are going to use, and the strategy/approach that you are going to use to handle high usage. You can use diagrams to help illustrate your explanation. Feel free to add assumptions.
 
 1. Let’s imagine we are going to build a Restful API system that can be accessed securely from public, fast enough to respond with sufficient body size, and minimum down time (nearly 0%). The system also will use common relational database (such as MySQL, PostgreSQL). With those conditions, tell us how would you design the system and the technologies that are used, preferably as cost-efficient as possible. Explain the strengths and weaknesses of that design.
 2. Let’s imagine we are going to build a web application. There will be several people working on the code, and we need the code to be documented for every change. We need a system with at least two environments (production and other environment(s)) that can support our fast-paced product-delivery every two weeks. Sometimes, when a bug is found, the fix needs to be implemented on the web application as soon as possible. With those conditions, what do you think is the best solution to be implemented and what technologies will you use?
