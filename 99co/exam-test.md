@@ -1,16 +1,28 @@
 # Part A
 
-1. _Tell us about your main motication to pursue a career in the software industry!_
+1. _Tell us about your main motivation to pursue a career in the software industry!_
 
-2) _Tell us about your strength that help your profession as a software engineer and how do you take advantage of them to become a better engineer!_
+   My main motivation to pursue a career in the software industry is driving by the reality now that people cannot separated with digital lifestyle. We know that digital lifestyle is inside all of our daily life, such as transportation, food, shopping, till one of the biggest decission in life, like buying home. So when all the activity moved to digital, we need solution to make this new lifestyle have good experience. Digital industry cannot be separated with software industry. So I want to involve in the process of digitalization on the all of lifestyle and make the experience of the product from this industry more better.
+
+2. _Tell us about your strength that help your profession as a software engineer and how do you take advantage of them to become a better engineer!_
+
+   My strength as a software engineer is curiousity, want to know everything as a whole big system, about technology that already used (also the alternative), and how things works. I also self proclaim that I am generalist, thats mean I will do everything as long as I can, specifically when doing my job as software engineer. When I know how all the small things works, I will also know how all whole big system works and hopefully can help me to troubleshoot when bad things happens, how to avoid them, and create better system.
 
 3. _Tell us about yout weaknesses that give you challenges and what are your efforts to overcome them!_
 
-4) _Tell us about the most challenging project that you have worked on and what efforts or strategies did you use to solve the problems you met in that project!_
+   My biggest weakness is I can only focus at one job, one task at a time. I can't do parallel job because it makes overwhelming and too much information in my head. So to tackle this, I will create prioritization about what task should be done first before anything else. I also can't do my task when in crowded and noisy place. So I will moved to place with little noise or using earphone when I do my task.
+
+4. _Tell us about the most challenging project that you have worked on and what efforts or strategies did you use to solve the problems you met in that project!_
+
+   The most challenging project that I have worked on is when migrating all cloud infrastructure from AWS to GCP. Because at that time I have no experience in GCP, firstly I have to learn the subtitution about what service that AWS provide and GCP provide. After that, I create spreadsheet that contains all of services that currently used in AWS and what the subtitution on GCP, and assign the migration tasks to the team. The migrations of all the service is conducted one by one, and the services and workloads will be running in parallel, both in AWS and GCP. After all the service is moved, we changed the DNS endpoint to the GCP and all workloads moved to new infrastructure in GCP.
 
 5. _Tell us about external factors that you would consider ideal to help you become a more effective engineer!_
 
+   I believe that having a role model in software industry with a lot of experience in solving various problem is one of external factors that helps me become a more effective engineer, because I can learn from his experience, either bad or good experience. So when I faced the same condition I have the solution from it. Having good community support in software industry is also a good external factor because we can share our experience with each other and we can also get feedback about it.
+
 6) _Tell us about how you see yourself in the next five years in software industry!_
+
+   In the next five years, I see myself have already known all the things that should exists in whole big software systems, including frontend, backend, infrastructure/DevOps thing, and also on the data side (data engineering, BI, AI) so I can give end-to-end solution to whom needed to solve the digitalization process. Beside that, we all know that technology development move so fast. So I will keep learning new things to keep updated about how to solve problem with the best tools and knowledge.
 
 # Part B
 
