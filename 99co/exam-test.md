@@ -168,6 +168,74 @@ This part helps us to understand how you would design and build a scalable syste
 
 Tell us how you would design the system given the requirements, what technologies (open source or 3rd party) you are going to use, and the strategy/approach that you are going to use to handle high usage. You can use diagrams to help illustrate your explanation. Feel free to add assumptions.
 
-1. Let’s imagine we are going to build a Restful API system that can be accessed securely from public, fast enough to respond with sufficient body size, and minimum down time (nearly 0%). The system also will use common relational database (such as MySQL, PostgreSQL). With those conditions, tell us how would you design the system and the technologies that are used, preferably as cost-efficient as possible. Explain the strengths and weaknesses of that design.
-2. Let’s imagine we are going to build a web application. There will be several people working on the code, and we need the code to be documented for every change. We need a system with at least two environments (production and other environment(s)) that can support our fast-paced product-delivery every two weeks. Sometimes, when a bug is found, the fix needs to be implemented on the web application as soon as possible. With those conditions, what do you think is the best solution to be implemented and what technologies will you use?
-3. Let’s imagine we already have a Web app that runs on production. The app is behind a load balancer, running on virtual machines/containers and use a single database for transaction data. To reduce operational cost, we want to move the system into cloud public infrastructure such as AWS or GCP. Describe the migration steps that we should do with minimum down time.
+1. _Let’s imagine we are going to build a Restful API system that can be accessed securely from public, fast enough to respond with sufficient body size, and minimum down time (nearly 0%). The system also will use common relational database (such as MySQL, PostgreSQL). With those conditions, tell us how would you design the system and the technologies that are used, preferably as cost-efficient as possible. Explain the strengths and weaknesses of that design._
+
+   **Answer**
+
+   **Outline**
+
+---
+
+2. _Let’s imagine we are going to build a web application. There will be several people working on the code, and we need the code to be documented for every change. We need a system with at least two environments (production and other environment(s)) that can support our fast-paced product-delivery every two weeks. Sometimes, when a bug is found, the fix needs to be implemented on the web application as soon as possible. With those conditions, what do you think is the best solution to be implemented and what technologies will you use?_
+
+   **Answer**
+
+   There are 3 problems that need to be solved in this scenario:
+
+   - How we make sure that several people can working on the code in parallel without problems, and all code change should be documented
+   - How we create multiple environments that can support delivery of the web product
+   - How to apply patch fix immediately when bug is found in production
+
+   In general, I would like to propose **Git** as version control system. Git will keep our codebase and people that working on the code will commit their work to it, so that means every change on the codebase will be documented.
+
+   To make this collaboration happens, we need Git server. So I proposed to use **Gitlab** as git repository server. Gitlab has a bunch of features that will help us develop and deliver the app to production. Some of the feature that will be use:
+
+   - Git repository
+   - Issue Tracker
+   - Merge Request
+   - Gitlab CI and Gitlab Runner (for CI/CD purposes)
+
+   When it comes to the branching model, I proposed to use **Trunk Based Development** with _short lived feature branch_. Here is the diagram of Trunk Based Development with short lived feature branch
+
+   ![trunk based development](../99co/images/part-c-2-1.png)
+
+   _Image taken from: [trunkbaseddevelopment.com](https://trunkbaseddevelopment.com)_
+
+   Trunk based development is a source-control branching model, where developers collaborate on code in a single branch called 'trunk' or on Git we called it 'master', resist any pressure to create other long-lived development branches by employing documented techniques. They therefore avoid merge hell, and do not break the build. When it comes at scale, trunk based development is best done with short lived feature branch, that means each person of development team working on code, has a 'feature' branch that will be lived over a couple of days (max), and will be merge through pull-request style code-review & build automation before merging into the trunk (master) branch. Usually 'feature' branch will follow the issue tracker number, so 1 issue/feature will be done in 1 feature branch with maximum development time of certain days only. When feature is ready to be released, we promote it using git tag with version number on the master branch that refer to certain commit.
+
+   To make product delivery at fast pace, we need system to automatically deliver new feature. So I proposed to use Continuous Integration & Continuous Deployment with one of Gitlab feature: Gitlab CI and Gitlab Runner. Gitlab CI is a part of Gitlab feature that helps us create integration & deployment pipeline of the code specially for code that hosted in Gitlab. We can define pipeline job, somehow like `build` job, `test` job, and `deploy` job on `gitlab-ci.yml` file inside code repository. To make this job run, we need job runner, that Gitlab Runner come to the rescue. It can run job inside VM, container, etc. We can also define what will trigger the pipeline. It can be push the certain branch, or certain tags, with certain prefix, etc.
+
+   Next part is the environment of code development and deployment. I proposed to have 3 different environment:
+
+   - Development Environment
+
+     This environment insist in every team member's workstation for developing purposes. It can be docker compose with service needed to run the web application.
+
+   - Staging Environment
+
+     This environment should be created for staging purposes. When team member develop new feature in 'feature' branch, and merged to trunk, it will be triggering CI pipeline to deploy the code to this environment. This environment should be same as Production environment, so when any bug or error happens in production, can be reproduced in staging environment.
+
+   - Production Environment
+
+     This environment will be the place of production workloads of the web application. When commit in trunk/master branch already deployed in staging environment and automated test conducted in CI job not showing any error, we can tag it as new 'release' with git tag (with certain format like `release-${version_number}`) and it will trigger CI pipeline to deploy the code to production environment.
+
+   When bug or error happens in production, we should apply patch fix immediately. Team that assigned to solve the problem can checkout to commit on trunk/master where error happens in production, reproduce the error on staging environment, then create a temporary 'feature' branch to solve the error, then merge back to trunk and give it a git tag with certain format to trigger path to production environment immediately. So this approach will take little time to be done.
+
+---
+
+3. _Let’s imagine we already have a Web app that runs on production. The app is behind a load balancer, running on virtual machines/containers and use a single database for transaction data. To reduce operational cost, we want to move the system into cloud public infrastructure such as AWS or GCP. Describe the migration steps that we should do with minimum down time._
+
+   **Answer**
+
+   **Outline**
+
+   - Assume current condition + diagram
+   - define new system in cloud
+   - migration step
+     - provision new infra in cloud
+     - deploy codebase to new cloud
+     - sync database to new infra
+     - change codebase to split read and write data to database
+     - first, old database are read write, but new database are read only.
+     - test all app functionality
+     - then after all test conducted and no problem, change config to read and write data to new database and switch dns endpoint to new loadbalancer
