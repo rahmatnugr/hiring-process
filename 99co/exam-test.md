@@ -1,3 +1,7 @@
+Name : Rahmat Nugraha
+
+99.co Technical Test
+
 # Part A
 
 1. _Tell us about your main motivation to pursue a career in the software industry!_
@@ -219,7 +223,7 @@ Tell us how you would design the system given the requirements, what technologie
 
      This environment will be the place of production workloads of the web application. When commit in trunk/master branch already deployed in staging environment and automated test conducted in CI job not showing any error, we can tag it as new 'release' with git tag (with certain format like `release-${version_number}`) and it will trigger CI pipeline to deploy the code to production environment.
 
-   When bug or error happens in production, we should apply patch fix immediately. Team that assigned to solve the problem can checkout to commit on trunk/master where error happens in production, reproduce the error on staging environment, then create a temporary 'feature' branch to solve the error, then merge back to trunk and give it a git tag with certain format to trigger path to production environment immediately. So this approach will take little time to be done.
+   When bug or error happens in production, we should apply patch fix immediately. Team member that assigned to solve the problem can checkout to commit on trunk/master where error happens in production, reproduce the error on staging environment, then create a temporary 'feature' branch to solve the error, then merge back to trunk and give it a git tag with certain format to trigger path to production environment immediately. So this approach will take little time to be done.
 
 ---
 
@@ -227,15 +231,73 @@ Tell us how you would design the system given the requirements, what technologie
 
    **Answer**
 
-   **Outline**
+   Assuming current condition of web app on-premise infrastructure shown in the following diagram:
 
-   - Assume current condition + diagram
-   - define new system in cloud
-   - migration step
-     - provision new infra in cloud
-     - deploy codebase to new cloud
-     - sync database to new infra
-     - change codebase to split read and write data to database
-     - first, old database are read write, but new database are read only.
-     - test all app functionality
-     - then after all test conducted and no problem, change config to read and write data to new database and switch dns endpoint to new loadbalancer
+   ![current condition](../99co/images/part-c-3-1.png)
+
+   These are parts of the infrastructure:
+
+   1. Firewall
+   2. Load Balancer (Haproxy)
+   3. Container cluster with multiple nodes (Docker Swarm)
+   4. Database Instance (MySQL)
+   5. DNS Hosting (Cloudflare)
+
+   For this migration, assuming we will moved to GCP stack. Before we migrate, firstly we need to design the new system based on technology on GCP. Here is the new design of infrastructure:
+
+   ![new condition](../99co/images/part-c-3-2.png)
+
+   Technology that will be used in GCP stack (subtitution from old stack):
+
+   | Name              | Old Stack           | New Stack                  |
+   | ----------------- | ------------------- | -------------------------- |
+   | Firewall          | On Premise Firewall | Firewall (included in VPC) |
+   | Load Balancer     | Haproxy             | Cloud Load Balancing       |
+   | Container Cluster | Docker Swarm        | Google Kubernetes Engine   |
+   | Database Instance | MySQL               | Cloud SQL for MySQL        |
+   | DNS Hosting       | Cloudflare          | Cloudflare                 |
+
+   When migrating this stack, we need to make sure that data on database is synced on both stack. So I proposed to use this scenario during migration:
+
+   ![migration scenario](../99co/images/part-c-3-3.png)
+
+   Web app deployment on the new stack will point the database connection differently. It needs to split between read and write connection. So, on the new stack, app will be connect to old database for writing transaction, and connect to new database for reading transaction. This approach will make the database in consistent state between old stack and new stack. For connecting both stack for database sync purpose, we use VPN connection with VPN endpoint on both side.
+
+   The old stack will continue serving traffic from public as long as the DNS still pointing to the on-premise network. When end-to-end testing has been done, we can change the pointing of DNS to the new stack and it will start serving the traffic. Then we can decommision the old stack.
+
+   After that, we need to do migration step by step:
+
+   1. Step 1: Provision new infrastructure stack in GCP
+
+      Create new GCP Account, set billing account, and start to create new infrastucture stack, begin with Google Kubernetes Engine (GKE), and then Cloud SQL for MySQL. After that, get the snapshot of latest MySQL data on the old database and restore it to Cloud SQL. So the new stack will have data from old database (although it will not up to date at the beginning). Also we need to provision VPN connection and VPN endpoint on both side.
+
+   2. Step 2: Create kubernetes object for deploying web app
+
+      I propose to change the container cluster orchestration from docker swarm to kubernetes, because kubernetes give us more flexibility and convenience when deploying app. With support from Google and more broad community, Google Kubernetes engine is more powerful than docker swarm.
+      So we need to create kubernetes deployment, service, ingress, etc, for the web app deployment.
+
+   3. Step 3: Make some modification on web app codebase, specifically on database connection
+
+      For database connection read and write splitting purpose, we need to change the codebase, specifically in database driver and connection configuration, so the behaviour will same as our goal.
+
+   4. Step 4: Enable database write sync from old stack to new stack
+
+      Use MySQL feature like `mysql_database_replication` for syncing write/update/delete transaction from old database to new database.
+
+   5. Step 5: Deploy web app to kubernetes with database connection split configuration
+
+      Deploy web app using kubernetes object that created before. Deployment object should contain database configuration that point read only connection to Cloud SQL, and write only connection to old MySQL. When ingress object configured with default GCE ingress, it will automatically creating new Cloud Load Balancer in GCP. Otherwise we can use 3rd party ingress like nginx-ingress.
+
+   6. Step 6: Test all app functionality
+
+      Do end-to-end test on the app functionality. When there is some error, fix it, redeploy it, and test again until all the functionality is good.
+
+   7. Step 7: _Switch_ to new infra completely
+
+      When all end-to-end test conducted and there was no error, change database connection config in kubernetes deployment object to point all read and write traffic to Cloud SQL, then point the DNS record to Cloud Load Balancing public IP Address (and also configure the SSL Certificate if any). So the production traffic from client will be served completely from GCP stack.
+
+      ![switch](../99co/images/part-c-3-4.png)
+
+   8. Step 8: Decommisioning the old stack (and VPN)
+
+      When things already in good state, and we don't need the old stack anymore, decommision all the stack on the on-premise infrastructure. Also delete the VPN connection and endpoint between two stack because we don't need it anymore.
