@@ -1,6 +1,6 @@
 Name : Rahmat Nugraha
 
-99.co Technical Test
+99.co Hiring - Technical Test
 
 # Part A
 
@@ -227,7 +227,7 @@ Tell us how you would design the system given the requirements, what technologie
 
 ---
 
-3. _Let’s imagine we already have a Web app that runs on production. The app is behind a load balancer, running on virtual machines/containers and use a single database for transaction data. To reduce operational cost, we want to move the system into cloud public infrastructure such as AWS or GCP. Describe the migration steps that we should do with minimum down time._
+1. _Let’s imagine we already have a Web app that runs on production. The app is behind a load balancer, running on virtual machines/containers and use a single database for transaction data. To reduce operational cost, we want to move the system into cloud public infrastructure such as AWS or GCP. Describe the migration steps that we should do with minimum down time._
 
    **Answer**
 
